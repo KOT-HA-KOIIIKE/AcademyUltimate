@@ -140,8 +140,8 @@ def analyze_page(source, is_url=True):
             report.append("✅ Нет ссылок на Хабр")
 
         report.append(f"\nБАННЕР: {'✅ Есть' if banner_exists else '❌ Нет'}")
-        report.append(f"ЧИТАЙТЕ ТАКЖЕ: {'✅ Есть' if read_also_exists else '❌ Нет'}")
-        report.append(f"ССЫЛКИ НА ПОЛЯХ: {'✅ Есть' if side_link_exists else '❌ Нет'}")
+        report.append(f"\nЧИТАЙТЕ ТАКЖЕ: {'✅ Есть' if read_also_exists else '❌ Нет'}")
+        report.append(f"\nССЫЛКИ НА ПОЛЯХ: {'✅ Есть' if side_link_exists else '❌ Нет'}")
 
         report.append("\nМЕТКИ:")
         if tags:
