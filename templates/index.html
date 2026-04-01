@@ -1,0 +1,306 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка статей</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            font-weight: 500;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: monospace;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .result-header {
+            background: #f8f9fa;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .result-content {
+            padding: 24px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            background: #fafafa;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            color: #dc3545;
+            background: #fff5f5;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 20px;
+            }
+        }
+
+        /* Стили для содержимого отчета */
+        .result-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Проверь себя, чтобы потом не было стыдно</h1>
+
+        <div class="cards">
+            <div class="card">
+                <h2>Если статья опубликована:</h2>
+                <div class="input-group">
+        <input type="text" id="url-input" placeholder="вставь ссылку на статью">
+    </div>
+    <button id="check-url-btn">Проверить</button>
+            </div>
+
+            <div class="card">
+                <h2>Если статья не опубликована:</h2>
+                <div class="input-group">
+                    <input type="file" id="html-file" accept=".html,.htm">
+                </div>
+                <button id="check-html-btn">Проверить</button>
+            </div>
+        </div>
+
+        <div class="result-section">
+            <div class="result-header">Результат проверки</div>
+            <div class="result-content" id="result-content">
+                <div class="loading">Ожидание проверки...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('url-input');
+        const fileInput = document.getElementById('html-file');
+        const checkUrlBtn = document.getElementById('check-url-btn');
+        const checkHtmlBtn = document.getElementById('check-html-btn');
+        const resultContent = document.getElementById('result-content');
+
+        function setLoading(text = 'Проверка выполняется...') {
+            resultContent.innerHTML = `<div class="loading">${text}</div>`;
+        }
+
+        function setError(message) {
+            resultContent.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+
+        function setResult(text) {
+            if (!text || text.trim() === '') {
+                resultContent.innerHTML = '<div class="loading">✅ Проверка завершена, но нет данных для отображения</div>';
+                return;
+            }
+            resultContent.innerHTML = `<pre>${escapeHtml(text)}</pre>`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function checkUrl() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                setError('Введите URL статьи');
+                return;
+            }
+
+            setLoading('Я работаю 🤌🏻');
+            checkUrlBtn.disabled = true;
+
+            try {
+                const response = await fetch('/check-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    setResult(data.result);
+                } else {
+                    setError(data.error || 'Неизвестная ошибка');
+                }
+            } catch (error) {
+                setError('Ошибка соединения: ' + error.message);
+            } finally {
+                checkUrlBtn.disabled = false;
+            }
+        }
+
+        async function checkHtml() {
+            const file = fileInput.files[0];
+            if (!file) {
+                setError('Выберите HTML-файл');
+                return;
+            }
+
+            if (!file.name.endsWith('.html') && !file.name.endsWith('.htm')) {
+                setError('Пожалуйста, выберите HTML-файл (.html или .htm)');
+                return;
+            }
+
+            setLoading('Я работаю 🤌🏻');
+            checkHtmlBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/check-html', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    setResult(data.result);
+                } else {
+                    setError(data.error || 'Неизвестная ошибка');
+                }
+            } catch (error) {
+                setError('Ошибка соединения: ' + error.message);
+            } finally {
+                checkHtmlBtn.disabled = false;
+            }
+        }
+
+        checkUrlBtn.addEventListener('click', checkUrl);
+        checkHtmlBtn.addEventListener('click', checkHtml);
+
+        // Поддержка Enter в поле URL
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkUrl();
+            }
+        });
+    </script>
+</body>
+</html>
