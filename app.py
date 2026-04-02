@@ -120,7 +120,7 @@ def analyze_page(source, is_url=True):
                 if not text: text = "[без текста]"
                 bad_links.append(f"{text} | {href} | ❌ открывается в той же вкладке")
 
-        # --- Сборка отчета в одну строку ---
+        # Сборка отчета
         report.append("МЕТА-ОПИСАНИЕ:")
         report.append(f"✅ {meta_description}" if meta_description else "❌ Нет мета-описания")
 
@@ -139,9 +139,11 @@ def analyze_page(source, is_url=True):
         else:
             report.append("✅ Нет ссылок на Хабр")
 
-        report.append(f"\nБАННЕР: {'✅ Есть' if banner_exists else '❌ Нет'}")
-        report.append(f"\nЧИТАЙТЕ ТАКЖЕ: {'✅ Есть' if read_also_exists else '❌ Нет'}")
-        report.append(f"\nССЫЛКИ НА ПОЛЯХ: {'✅ Есть' if side_link_exists else '❌ Нет'}")
+        report.append(f"\nБАННЕР: \n{'✅ Есть' if banner_exists else '❌ Нет'}")
+
+        report.append(f"\nЧИТАЙТЕ ТАКЖЕ: \n{'✅ Есть' if read_also_exists else '❌ Нет'}")
+
+        report.append(f"\nССЫЛКИ НА ПОЛЯХ: \n{'✅ Есть' if side_link_exists else '❌ Нет'}")
 
         report.append("\nМЕТКИ:")
         if tags:
